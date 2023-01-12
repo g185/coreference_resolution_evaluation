@@ -1,0 +1,4 @@
+jsonlines
+fastcoref
+numpy
+scipy
