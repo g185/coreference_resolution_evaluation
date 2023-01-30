@@ -1,4 +1,4 @@
 outputs/*
-inputs/*
+inputs/test.english.jsonlines
 scripts/*
 .idea
