@@ -1,2 +1,4 @@
-output*
+outputs/*
+inputs/*
+scripts/*
 .idea

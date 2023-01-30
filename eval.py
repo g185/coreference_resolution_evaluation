@@ -5,7 +5,7 @@ import argparse
 from metrics import MentionEvaluator, CoNLL2012CorefEvaluator
 
 #returns: docs: dict("sentences":[["w1","w2",...]], "clusters":[[[wstart,wend]...]]
-def extract_and_preprocess(input:str = "test.english.jsonlines"):
+def extract_and_preprocess(input:str = "inputs/test.english.jsonlines"):
     docs = []
     with jsonlines.open(input) as f:
         for elem in f:
@@ -81,7 +81,7 @@ def write_scores_report(pred, gold, pred_output_name, gold_output_name):
         f.write("\t|------f1 scor: %.3f \n" % conll2012["f1_score"])
 
 #creates output dir
-def write_all_outputs(pred, gold, pred_output_name="output", gold_output_name="test.english.jsonlines"):
+def write_all_outputs(pred, gold, pred_output_name, gold_output_name):
     try:
         subprocess.call("rm -r "+pred_output_name, shell=True)
     except:
@@ -129,8 +129,8 @@ def extract_from_results(docs):
 def parse_args():
     parser = argparse.ArgumentParser()
     parser.add_argument("--model",type=str, help="model name, from [lingmess, fastcoref], default:lingmess", default="lingmess")
-    parser.add_argument("--custom_test_file", type=str, default="test.english.jsonlines", help="custom test set filename, default: test.english.jsonlines")
-    parser.add_argument("--custom_output_path", type=str, default="output", help="custom output path filename, default: output")
+    parser.add_argument("--custom_test_path", type=str, default="inputs/test.english.jsonlines", help="custom test path filename, default: inputs/test.english.jsonlines")
+    parser.add_argument("--custom_output_path", type=str, default="outputs/output", help="custom output path filename, default: outputs/output")
     parser.add_argument("--cpu", action="store_true", help="to evaluate on cpu")
 
     return parser.parse_args()
