@@ -10,9 +10,9 @@ def correct_fastcoref_clusters(list_of_clusters):
         corrected_list_of_clusters.append(correct)
     return corrected_list_of_clusters
 
-def write_docs_to_jsonlines(name, docs):
+def write_docs_to_jsonlines(path, name, docs):
     #write
-    with jsonlines.open(name + ".jsonlines", mode="w") as f:
+    with jsonlines.open(path + name + ".jsonlines", mode="w") as f:
         for line in docs:
             f.write(line)
 

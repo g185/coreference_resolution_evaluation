@@ -5,7 +5,7 @@ import argparse
 from metrics import MentionEvaluator, CoNLL2012CorefEvaluator
 
 #returns: docs: dict("sentences":[["w1","w2",...]], "clusters":[[[wstart,wend]...]]
-def extract_and_preprocess(input:str = "inputs/test.english.jsonlines"):
+def extract_and_preprocess(input:str):
     docs = []
     with jsonlines.open(input) as f:
         for elem in f:
@@ -81,25 +81,26 @@ def write_scores_report(pred, gold, pred_output_name, gold_output_name):
         f.write("\t|------f1 scor: %.3f \n" % conll2012["f1_score"])
 
 #creates output dir
-def write_all_outputs(pred, gold, pred_output_name, gold_output_name):
+def write_all_outputs(pred, gold, pred_output_path, gold_output_name):
     try:
-        subprocess.call("rm -r "+pred_output_name, shell=True)
+        subprocess.call("rm -r "+ pred_output_path, shell=True)
     except:
         print("")
-    subprocess.call("mkdir "+pred_output_name, shell=True)
-    gold_output_path = pred_output_name + "/" + gold_output_name.strip(".jsonlines")
-    pred_output_path = pred_output_name + "/" + pred_output_name
+    subprocess.call("mkdir " +  pred_output_path, shell=True)
+    
+    pred_output_path = pred_output_path + "/"
+    gold_output_name =  gold_output_name.strip(".jsonlines")
 
-    write_docs_to_jsonlines(pred_output_path, pred)
-    write_docs_to_jsonlines(gold_output_path, gold)
+    write_docs_to_jsonlines(pred_output_path, "pred", pred)
+    write_docs_to_jsonlines(pred_output_path, gold_output_name, gold)
 
-    jsonlines_to_html(gold_output_path)
-    jsonlines_to_html(pred_output_path)
+    jsonlines_to_html(pred_output_path + "pred")
+    jsonlines_to_html(pred_output_path + gold_output_name)
 
-    jsonlines_to_conll(gold_output_path)
-    jsonlines_to_conll(pred_output_path)
+    jsonlines_to_conll(pred_output_path + gold_output_name)
+    jsonlines_to_conll(pred_output_path + "pred")
 
-    write_scores_report(pred, gold, pred_output_name, gold_output_name)
+    write_scores_report(pred, gold, pred_output_path, gold_output_name + ".jsonlines")
 
 #returns:
 #mentions: [[(wstart, wend)]] list(docs) x list(mentions) x tuple(mention)
@@ -128,24 +129,33 @@ def extract_from_results(docs):
 
 def parse_args():
     parser = argparse.ArgumentParser()
-    parser.add_argument("--model",type=str, help="model name, from [lingmess, fastcoref], default:lingmess", default="lingmess")
-    parser.add_argument("--custom_test_path", type=str, default="inputs/test.english.jsonlines", help="custom test path filename, default: inputs/test.english.jsonlines")
-    parser.add_argument("--custom_output_path", type=str, default="outputs/output", help="custom output path filename, default: outputs/output")
+    parser.add_argument("--model", type=str, help="model name, from [lingmess, fastcoref]", required=False)
+    parser.add_argument("--custom_input_path", type=str, help="custom input path filename", default="test.english.jsonlines", required=False)
+    parser.add_argument("--custom_test_path", type=str, default="test.english.jsonlines", help="custom test path filename, default: test.english.jsonlines -> test/test.english.jsonlines")
+    parser.add_argument("--custom_output_path", type=str, default="output", help="custom output path filename, default: output -> outputs/output")
     parser.add_argument("--cpu", action="store_true", help="to evaluate on cpu")
 
+    
     return parser.parse_args()
 
 
 def main():
     args = parse_args()
-    device = "cuda:0" if not args.cpu else "cpu"
-    if args.model == "lingmess":
-        model = LingMessCoref(device=device)
-    elif args.model == "fastcoref":
-        model = FCoref(device=device)
-    gold = extract_and_preprocess(input=args.custom_test_file)
-    pred = predict(model, gold)
-    write_all_outputs(pred, gold, pred_output_name=args.custom_output_path, gold_output_name=args.custom_test_file)
+
+    gold = extract_and_preprocess(input= "test/"+args.custom_test_path)
+
+    if (args.model is not None and args.custom_input_path is None):
+        device = "cuda:0" if not args.cpu else "cpu"
+        if args.model == "lingmess":
+            model = LingMessCoref(device=device)
+        elif args.model == "fastcoref":
+            model = FCoref(device=device)
+        pred = predict(model, gold)
+
+    elif (args.model is None and args.custom_input_path is not None):
+        pred = extract_and_preprocess("test/" + args.custom_input_path) 
+        
+    write_all_outputs(pred, gold, pred_output_path="outputs/" + args.custom_output_path, gold_output_name=args.custom_test_path)
 
 if __name__ == "__main__":
     main()

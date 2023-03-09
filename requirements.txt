@@ -1,4 +1,5 @@
 jsonlines
 fastcoref
 numpy
+jsonlines
 scipy
